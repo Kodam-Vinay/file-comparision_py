@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
+
 def convert_docx_to_pdf(docx_path, pdf_path):
     """Convert .docx to PDF using LibreOffice (soffice)."""
     try:
@@ -27,6 +28,7 @@ def convert_docx_to_pdf(docx_path, pdf_path):
         logger.error(f"PDF conversion failed: {e}")
         raise Exception(f"PDF conversion failed: {e}")
 
+
 def get_words(text):
     """Split text into words for comparison."""
     return text.split()
@@ -35,6 +37,15 @@ def word_diff(old_words, new_words):
     """Generate a word-by-word diff using SequenceMatcher."""
     matcher = difflib.SequenceMatcher(None, old_words, new_words)
     return matcher.get_opcodes()
+
+@app.route("/connection",methods=['GET'])
+def check_connection():
+    try:
+        return jsonify({"status": True, "message": "Connection Successful"}), 200
+    except:
+            logger.error(f"Error in compare_docs: {e}")
+            return jsonify({"status": False, "message": str(e)}), 500
+
 
 @app.route('/compare', methods=['POST'])
 def compare_docs():
@@ -143,4 +154,6 @@ def compare_docs():
         return jsonify({"status": False, "message": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 8000))
+    app.run(host='0.0.0.0', port=port, debug=True)
+

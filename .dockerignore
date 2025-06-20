@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+*.docx
+*.pdf
+tmp/
+.env.*
+*.log
