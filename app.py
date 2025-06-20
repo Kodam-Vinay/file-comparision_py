@@ -11,14 +11,13 @@ import base64
 app = Flask(__name__)
 
 def convert_docx_to_pdf(docx_path, pdf_path):
+    """Convert .docx to PDF using LibreOffice or unoconv."""
     try:
-        from docx2pdf import convert
-        convert(docx_path, pdf_path)
-    except ImportError:
-        try:
-            subprocess.run(['unoconv', '-f', 'pdf', '-o', os.path.dirname(pdf_path), docx_path], check=True)
-        except:
-            subprocess.run(['soffice', '--convert-to', 'pdf', '--outdir', os.path.dirname(pdf_path), docx_path], check=True)
+        # Try unoconv first (if installed)
+        subprocess.run(['unoconv', '-f', 'pdf', '-o', os.path.dirname(pdf_path), docx_path], check=True)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        # Fall back to soffice (LibreOffice)
+        subprocess.run(['soffice', '--convert-to', 'pdf', '--outdir', os.path.dirname(pdf_path), docx_path], check=True)
 
 def get_words(text):
     """Split text into words for comparison."""
