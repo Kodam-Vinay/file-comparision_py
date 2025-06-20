@@ -7,17 +7,25 @@ from reportlab.pdfgen import canvas
 import os
 import subprocess
 import base64
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
 def convert_docx_to_pdf(docx_path, pdf_path):
-    """Convert .docx to PDF using LibreOffice or unoconv."""
+    """Convert .docx to PDF using LibreOffice (soffice)."""
     try:
-        # Try unoconv first (if installed)
-        subprocess.run(['unoconv', '-f', 'pdf', '-o', os.path.dirname(pdf_path), docx_path], check=True)
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        # Fall back to soffice (LibreOffice)
-        subprocess.run(['soffice', '--convert-to', 'pdf', '--outdir', os.path.dirname(pdf_path), docx_path], check=True)
+        cmd = ['soffice', '--headless', '--convert-to', 'pdf', '--outdir', os.path.dirname(pdf_path), docx_path]
+        logger.info(f"Running: {' '.join(cmd)}")
+        subprocess.run(cmd, check=True, timeout=60)
+    except subprocess.TimeoutExpired as e:
+        logger.error(f"PDF conversion timed out: {e}")
+        raise Exception("PDF conversion timed out")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"PDF conversion failed: {e}")
+        raise Exception(f"PDF conversion failed: {e}")
 
 def get_words(text):
     """Split text into words for comparison."""
@@ -131,6 +139,7 @@ def compare_docs():
             return jsonify(result)
 
     except Exception as e:
+        logger.error(f"Error in compare_docs: {e}")
         return jsonify({"status": False, "message": str(e)}), 500
 
 if __name__ == '__main__':
